@@ -1,11 +1,11 @@
 defmodule Result do
-
   @moduledoc """
   Library containing helper functions for the result monad.
   """
 
-  @type t :: {:ok, term}
-    | {:error, term}
+  @type t ::
+          {:ok, term}
+          | {:error, term}
 
   @doc """
   Elevates a value to a Result type.
@@ -77,6 +77,7 @@ defmodule Result do
     case :erlang.fun_info(fun, :arity) do
       {_, 0} ->
         {:error, "Result.appl: arity error"}
+
       _ ->
         {:ok, curry(fun, value)}
     end
@@ -144,7 +145,7 @@ defmodule Result do
       5
 
   """
-  @spec expect!(t, String.t) :: term
+  @spec expect!(t, String.t()) :: term
   def expect!({:ok, value}, _), do: value
 
   def expect!(_, message), do: throw(message)
@@ -238,14 +239,16 @@ defmodule Result do
       {:error, "Oops"}
 
   """
-  @spec flatten_enum(Enum.t) :: t
+  @spec flatten_enum(Enum.t()) :: t
   def flatten_enum(%{} = enum) do
     Enum.reduce(enum, {:ok, %{}}, fn
       {key, {:ok, value}}, {:ok, result} ->
         Map.put(result, key, value)
         |> return
+
       _, {:error, _} = error ->
         error
+
       {_, {:error, _} = error}, _ ->
         error
     end)
@@ -255,8 +258,10 @@ defmodule Result do
     Enum.reduce(enum, {:ok, []}, fn
       {:ok, value}, {:ok, result} ->
         {:ok, [value | result]}
+
       _, {:error, _} = error ->
         error
+
       {:error, _} = error, _ ->
         error
     end)
@@ -271,11 +276,11 @@ defmodule Result do
   @spec apply_curry(fun, [term]) :: term
   defp apply_curry(fun, args) do
     {_, arity} = :erlang.fun_info(fun, :arity)
+
     if arity == length(args) do
       apply(fun, Enum.reverse(args))
     else
       fn arg -> apply_curry(fun, [arg | args]) end
     end
   end
-
 end
