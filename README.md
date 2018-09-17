@@ -1,6 +1,6 @@
 # Result
 
-**TODO: Add description**
+Elixir library with helper functions dealing with ok and error tuple sets.
 
 ## Installation
 
