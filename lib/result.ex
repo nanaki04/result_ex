@@ -42,6 +42,14 @@ defmodule Result do
   def map(error, _), do: error
 
   @doc """
+  Partially applies Result.map with the passed function.
+  """
+  @spec map((t -> t)) :: (t -> t)
+  def map(fun) do
+    fn result -> map(result, fun) end
+  end
+
+  @doc """
   Executes or partially executes the function given as value of the first Result,
   and applies it with the value of the second Result.
   If the function has an arity greater than 1, the returned Result value will be the function partially applied.
@@ -117,6 +125,14 @@ defmodule Result do
   end
 
   def bind(error, _), do: error
+
+  @doc """
+  Partially applies Result.bind with the passed function.
+  """
+  @spec bind((term -> t)) :: (t -> t)
+  def bind(fun) do
+    fn result -> bind(result, fun) end
+  end
 
   @doc """
   Unwraps the Result to return its value.
