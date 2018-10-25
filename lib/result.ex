@@ -286,6 +286,28 @@ defmodule Result do
 
   def flatten_enum(_), do: {:error, "Result.flatten_enum Unknown Type"}
 
+  @doc """
+  Converts the Result to an Option.
+  An Option is a {:some, term} tuple pair, or the :none atom.
+
+  ## Examples
+
+      iex> Result.return(5)
+      ...> |> Result.to_option()
+      {:some, 5}
+
+      iex> {:error, "Oops"}
+      ...> |> Result.to_option()
+      :none
+
+  """
+  @spec to_option(t) :: {:some, term} | :none
+  def to_option({:ok, value}) do
+    {:some, value}
+  end
+
+  def to_option({:error, _}), do: :none
+
   @spec curry(fun, term) :: term
   defp curry(fun, arg1), do: apply_curry(fun, [arg1])
 
