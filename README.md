@@ -12,29 +12,38 @@ Also, functions can be connected that will only execute in the case of an error.
 ## Examples
 
 ```elixir
-    iex> defmodule ResultExample do
-    ...>
-    ...>   def divide(0, _), do: {:error, :zero_division_exception}
-    ...>   def divide(0.0, _), do: {:error, :zero_division_exception}
-    ...>   def divide(x, y), do: Result.return(x / y)
-    ...>   def subtract(x, y), do: Result.return(x - y)
-    ...>
-    ...> end
-    ...>
-    ...> ResultExample.divide(4, 2)
-    ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
-    {:ok, 0.0}
-    iex> ResultExample.divide(4, 2)
-    ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
-    ...> |> Result.bind(fn x -> ResultExample.divide(x, 2) end)
-    ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
-    {:error, :zero_division_exception}
-    iex> ResultExample.divide(0, 2)
-    ...> |> Result.or_else(2)
-    2
-    iex> ResultExample.divide(0, 2)
-    ...> |> Result.or_else_with(fn _err -> {:ok, 0} end)
-    {:ok, 0}
+defmodule ResultExample do
+
+  def divide(0, _), do: {:error, :zero_division_exception}
+  def divide(0.0, _), do: {:error, :zero_division_exception}
+  def divide(x, y), do: Result.return(x / y)
+  def subtract(x, y), do: Result.return(x - y)
+
+end
+
+ResultExample.divide(4, 2)
+|> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+{ :ok, 0.0}
+```
+
+```elixir
+ResultExample.divide(4, 2)
+|> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+|> Result.bind(fn x -> ResultExample.divide(x, 2) end)
+|> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+{:error, :zero_division_exception}
+```
+
+```elixir
+iex> ResultExample.divide(0, 2)
+...> |> Result.or_else(2)
+2
+```
+
+```elixir
+ResultExample.divide(0, 2)
+|> Result.or_else_with(fn _err -> {:ok, 0} end)
+{:ok, 0}
 ```
 
 ## Installation
