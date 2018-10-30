@@ -1,5 +1,5 @@
-defmodule ResultTest do
+defmodule ResultExTest do
   use ExUnit.Case
-  alias Elixir.Result
-  doctest Result
+  alias Elixir.ResultEx
+  doctest ResultEx
 end

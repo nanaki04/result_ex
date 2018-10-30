@@ -1,38 +1,39 @@
-defmodule Result do
+defmodule ResultEx do
   @moduledoc """
-  Result is a module for handling functions returning a `t:Result.t/0`.
-  This module is inspired by the f# Result module.
+  ResultEx is a module for handling functions returning a `t:ResultEx.t/0`.
+  This module is inspired by the f# ResultEx module, and Railway Oriented Programming as explained here by Scott Wlaschin here: https://fsharpforfunandprofit.com/rop/
+
   A result can be either the tuple {:ok, term} where term will be the expected return value of a function,
   or the tuple {:error, term} where term will be an explanation of what went wrong while executing a function.
 
-  Using this module, it will be possible to combine functions that return a `t:Result.t/0`, and functions that take the value contained by the ok variant.
+  Using this module, it will be possible to combine functions that return a `t:ResultEx.t/0`, and functions that take the value contained by the ok variant.
   In the case one of the functions returns an error variant, subsequent functions expecting an ok result can be prevented from being executed.
   Also, functions can be connected that will only execute in the case of an error.
 
   ## Examples
 
-      iex> defmodule ResultExample do
+      iex> defmodule ResultExExample do
       ...>
       ...>   def divide(0, _), do: {:error, :zero_division_exception}
       ...>   def divide(0.0, _), do: {:error, :zero_division_exception}
-      ...>   def divide(x, y), do: Result.return(x / y)
-      ...>   def subtract(x, y), do: Result.return(x - y)
+      ...>   def divide(x, y), do: ResultEx.return(x / y)
+      ...>   def subtract(x, y), do: ResultEx.return(x - y)
       ...>
       ...> end
       ...>
-      ...> ResultExample.divide(4, 2)
-      ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+      ...> ResultExExample.divide(4, 2)
+      ...> |> ResultEx.bind(fn x -> ResultExExample.subtract(x, 2) end)
       {:ok, 0.0}
-      iex> ResultExample.divide(4, 2)
-      ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
-      ...> |> Result.bind(fn x -> ResultExample.divide(x, 2) end)
-      ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+      iex> ResultExExample.divide(4, 2)
+      ...> |> ResultEx.bind(fn x -> ResultExExample.subtract(x, 2) end)
+      ...> |> ResultEx.bind(fn x -> ResultExExample.divide(x, 2) end)
+      ...> |> ResultEx.bind(fn x -> ResultExExample.subtract(x, 2) end)
       {:error, :zero_division_exception}
-      iex> ResultExample.divide(0, 2)
-      ...> |> Result.or_else(2)
+      iex> ResultExExample.divide(0, 2)
+      ...> |> ResultEx.or_else(2)
       2
-      iex> ResultExample.divide(0, 2)
-      ...> |> Result.or_else_with(fn _err -> {:ok, 0} end)
+      iex> ResultExExample.divide(0, 2)
+      ...> |> ResultEx.or_else_with(fn _err -> {:ok, 0} end)
       {:ok, 0}
 
   """
@@ -42,11 +43,11 @@ defmodule Result do
           | {:error, term}
 
   @doc """
-  Elevates a value to a `t:Result.t/0` type.
+  Elevates a value to a `t:ResultEx.t/0` type.
 
   ## Examples
 
-      iex> Result.return(1)
+      iex> ResultEx.return(1)
       {:ok, 1}
 
   """
@@ -54,17 +55,17 @@ defmodule Result do
   def return(value), do: {:ok, value}
 
   @doc """
-  Runs a function against the `t:Result.t/0`s value.
-  If the `t:Result.t/0` is an error, the function will not be executed.
+  Runs a function against the `t:ResultEx.t/0`s value.
+  If the `t:ResultEx.t/0` is an error, the function will not be executed.
 
   ## Examples
 
       iex> result = {:ok, 1}
-      ...> Result.map(result, &(&1 + 1))
+      ...> ResultEx.map(result, &(&1 + 1))
       {:ok, 2}
 
       iex> result = {:error, "Oops"}
-      ...> Result.map(result, &(&1 + 1))
+      ...> ResultEx.map(result, &(&1 + 1))
       {:error, "Oops"}
 
   """
@@ -76,7 +77,7 @@ defmodule Result do
   def map(result, _), do: result
 
   @doc """
-  Partially applies `Result.map/2` with the passed function.
+  Partially applies `ResultEx.map/2` with the passed function.
   """
   @spec map((t -> t)) :: (t -> t)
   def map(fun) do
@@ -84,34 +85,34 @@ defmodule Result do
   end
 
   @doc """
-  Executes or partially executes the function given as value of the first `t:Result.t/0`,
-  and applies it with the value of the second `t:Result.t/0`.
-  If the function has an arity greater than 1, the returned `t:Result.t/0` value will be the function partially applied.
+  Executes or partially executes the function given as value of the first `t:ResultEx.t/0`,
+  and applies it with the value of the second `t:ResultEx.t/0`.
+  If the function has an arity greater than 1, the returned `t:ResultEx.t/0` value will be the function partially applied.
   (The function name is 'appl' rather than 'apply' to prevent import conflicts with 'Kernel.apply')
 
   ## Examples
 
       iex> value_result = {:ok, 1}
       ...> function_result = {:ok, fn value -> value + 1 end}
-      ...> Result.appl(function_result, value_result)
+      ...> ResultEx.appl(function_result, value_result)
       {:ok, 2}
 
       iex> {:ok, fn value1, value2, value3 -> value1 + value2 + value3 end}
-      ...> |> Result.appl({:ok, 1})
-      ...> |> Result.appl({:ok, 2})
-      ...> |> Result.appl({:ok, 3})
+      ...> |> ResultEx.appl({:ok, 1})
+      ...> |> ResultEx.appl({:ok, 2})
+      ...> |> ResultEx.appl({:ok, 3})
       {:ok, 6}
 
       iex> {:error, "no such function"}
-      ...> |> Result.appl({:ok, 1})
-      ...> |> Result.appl({:ok, 1})
-      ...> |> Result.appl({:ok, 1})
+      ...> |> ResultEx.appl({:ok, 1})
+      ...> |> ResultEx.appl({:ok, 1})
+      ...> |> ResultEx.appl({:ok, 1})
       {:error, "no such function"}
 
       iex> {:ok, fn value1, value2, value3 -> value1 + value2 + value3 end}
-      ...> |> Result.appl({:ok, 1})
-      ...> |> Result.appl({:ok, 1})
-      ...> |> Result.appl({:error, "no such value"})
+      ...> |> ResultEx.appl({:ok, 1})
+      ...> |> ResultEx.appl({:ok, 1})
+      ...> |> ResultEx.appl({:error, "no such value"})
       {:error, "no such value"}
 
   """
@@ -119,7 +120,7 @@ defmodule Result do
   def appl({:ok, fun}, {:ok, value}) do
     case :erlang.fun_info(fun, :arity) do
       {_, 0} ->
-        {:error, "Result.appl: arity error"}
+        {:error, "ResultEx.appl: arity error"}
 
       _ ->
         {:ok, curry(fun, value)}
@@ -131,9 +132,9 @@ defmodule Result do
   def appl(_, {:error, _} = error), do: error
 
   @doc """
-  Applies a function with the value of the `t:Result.t/0`.
-  The passed function is expected to return a `t:Result.t/0`.
-  This can be useful for chaining functions together that elevate values into `t:Result.t/0`s.
+  Applies a function with the value of the `t:ResultEx.t/0`.
+  The passed function is expected to return a `t:ResultEx.t/0`.
+  This can be useful for chaining functions together that elevate values into `t:ResultEx.t/0`s.
 
   ## Examples
 
@@ -142,7 +143,7 @@ defmodule Result do
       ...>   n -> {:ok, n / 2}
       ...> end
       ...> divide.(4)
-      ...> |> Result.bind(divide)
+      ...> |> ResultEx.bind(divide)
       {:ok, 1.0}
 
       iex> divide = fn
@@ -150,7 +151,7 @@ defmodule Result do
       ...>   n -> {:ok, n / 2}
       ...> end
       ...> divide.(0)
-      ...> |> Result.bind(divide)
+      ...> |> ResultEx.bind(divide)
       {:error, "Zero division"}
 
   """
@@ -162,7 +163,7 @@ defmodule Result do
   def bind(result, _), do: result
 
   @doc """
-  Partially applies `Result.bind/2` with the passed function.
+  Partially applies `ResultEx.bind/2` with the passed function.
   """
   @spec bind((term -> t)) :: (t -> t)
   def bind(fun) do
@@ -170,13 +171,13 @@ defmodule Result do
   end
 
   @doc """
-  Unwraps the `t:Result.t/0` to return its value.
-  Throws an error if the `t:Result.t/0` is an error.
+  Unwraps the `t:ResultEx.t/0` to return its value.
+  Throws an error if the `t:ResultEx.t/0` is an error.
 
   ## Examples
 
-      iex> Result.return(5)
-      ...> |> Result.unwrap!()
+      iex> ResultEx.return(5)
+      ...> |> ResultEx.unwrap!()
       5
 
   """
@@ -186,13 +187,13 @@ defmodule Result do
   def unwrap!({:error, error}), do: throw(error)
 
   @doc """
-  Unwraps the `t:Result.t/0` to return its value.
-  The second argument will be a specific error message to throw when the `t:Result.t/0` is an Error.
+  Unwraps the `t:ResultEx.t/0` to return its value.
+  The second argument will be a specific error message to throw when the `t:ResultEx.t/0` is an Error.
 
   ## Examples
 
-      iex> Result.return(5)
-      ...> |> Result.expect!("The value was not what was expected")
+      iex> ResultEx.return(5)
+      ...> |> ResultEx.expect!("The value was not what was expected")
       5
 
   """
@@ -202,17 +203,17 @@ defmodule Result do
   def expect!(_, message), do: throw(message)
 
   @doc """
-  Unwraps the `t:Result.t/0` to return its value.
-  If the `t:Result.t/0` is an error, it will return the default value passed as second argument instead.
+  Unwraps the `t:ResultEx.t/0` to return its value.
+  If the `t:ResultEx.t/0` is an error, it will return the default value passed as second argument instead.
 
   ## Examples
 
-      iex> Result.return(5)
-      ...> |> Result.or_else(4)
+      iex> ResultEx.return(5)
+      ...> |> ResultEx.or_else(4)
       5
 
       iex> {:error, "Oops"}
-      ...> |> Result.or_else(4)
+      ...> |> ResultEx.or_else(4)
       4
 
   """
@@ -222,17 +223,17 @@ defmodule Result do
   def or_else(_, default), do: default
 
   @doc """
-  Unwraps the `t:Result.t/0` to return its value.
-  If the `t:Result.t/0` is an error, the given function will be applied with the unwrapped error instead.
+  Unwraps the `t:ResultEx.t/0` to return its value.
+  If the `t:ResultEx.t/0` is an error, the given function will be applied with the unwrapped error instead.
 
   ## Examples
 
-      iex> Result.return(5)
-      ...> |> Result.or_else_with(fn err -> IO.inspect(err) end)
+      iex> ResultEx.return(5)
+      ...> |> ResultEx.or_else_with(fn err -> IO.inspect(err) end)
       5
 
       iex> {:error, "Oops"}
-      ...> |> Result.or_else_with(fn err -> err <> "!" end)
+      ...> |> ResultEx.or_else_with(fn err -> err <> "!" end)
       "Oops!"
 
   """
@@ -242,18 +243,18 @@ defmodule Result do
   def or_else_with({:error, error}, fun), do: fun.(error)
 
   @doc """
-  Flatten nested `t:Result.t/0`s into a single `t:Result.t/0`.
+  Flatten nested `t:ResultEx.t/0`s into a single `t:ResultEx.t/0`.
 
   ## Examples
 
-      iex> Result.return(5)
-      ...> |> Result.return()
-      ...> |> Result.return()
-      ...> |> Result.flatten()
+      iex> ResultEx.return(5)
+      ...> |> ResultEx.return()
+      ...> |> ResultEx.return()
+      ...> |> ResultEx.flatten()
       {:ok, 5}
 
       iex> {:ok, {:ok, {:error, "Oops"}}}
-      ...> |> Result.flatten()
+      ...> |> ResultEx.flatten()
       {:error, "Oops"}
 
   """
@@ -269,24 +270,24 @@ defmodule Result do
   def flatten({:error, _} = error), do: error
 
   @doc """
-  Flattens an `t:Enumerable.t/0` of `t:Result.t/0`s into a `t:Result.t/0` of enumerables.
+  Flattens an `t:Enumerable.t/0` of `t:ResultEx.t/0`s into a `t:ResultEx.t/0` of enumerables.
 
   ## Examples
 
       iex> [{:ok, 1}, {:ok, 2}, {:ok, 3}]
-      ...> |> Result.flatten_enum()
+      ...> |> ResultEx.flatten_enum()
       {:ok, [1, 2, 3]}
 
       iex> [{:ok, 1}, {:error, "Oops"}, {:ok, 3}]
-      ...> |> Result.flatten_enum()
+      ...> |> ResultEx.flatten_enum()
       {:error, "Oops"}
 
       iex> %{a: {:ok, 1}, b: {:ok, 2}, c: {:ok, 3}}
-      ...> |> Result.flatten_enum()
+      ...> |> ResultEx.flatten_enum()
       {:ok, %{a: 1, b: 2, c: 3}}
 
       iex> %{a: {:ok, 1}, b: {:error, "Oops"}, c: {:ok, 3}}
-      ...> |> Result.flatten_enum()
+      ...> |> ResultEx.flatten_enum()
       {:error, "Oops"}
 
   """
@@ -319,20 +320,20 @@ defmodule Result do
     |> map(&Enum.reverse/1)
   end
 
-  def flatten_enum(_), do: {:error, "Result.flatten_enum Unknown Type"}
+  def flatten_enum(_), do: {:error, "ResultEx.flatten_enum Unknown Type"}
 
   @doc """
-  Converts the `t:Result.t/0` to an Option.
+  Converts the `t:ResultEx.t/0` to an Option.
   An Option is a {:some, term} tuple pair, or the :none atom.
 
   ## Examples
 
-      iex> Result.return(5)
-      ...> |> Result.to_option()
+      iex> ResultEx.return(5)
+      ...> |> ResultEx.to_option()
       {:some, 5}
 
       iex> {:error, "Oops"}
-      ...> |> Result.to_option()
+      ...> |> ResultEx.to_option()
       :none
 
   """

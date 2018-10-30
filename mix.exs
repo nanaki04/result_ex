@@ -1,22 +1,23 @@
-defmodule Result.MixProject do
+defmodule ResultEx.MixProject do
   use Mix.Project
 
   @github "https://github.com/nanaki04/result_ex"
 
   def project do
     [
-      app: :result,
+      app: :result_ex,
       version: "0.1.0",
-      description: "Module with helper functions for handling {:ok, value} or {:error, reason} return values",
+      description:
+        "Module with helper functions for handling {:ok, value} or {:error, reason} return values",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
 
       # Docs
-      name: "Result",
+      name: "ResultEx",
       source_url: @github,
       docs: [
-        main: "Result",
+        main: "ResultEx",
         extras: ["README.md"]
       ],
 
@@ -27,9 +28,7 @@ defmodule Result.MixProject do
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    [
-      extra_applications: []
-    ]
+    []
   end
 
   # Run "mix help deps" to learn about dependencies.
@@ -42,7 +41,8 @@ defmodule Result.MixProject do
 
   defp package do
     [
-      licences: ["MIT"],
+      licenses: ["MIT"],
+      maintainers: ["Robert Jan Zwetsloot"],
       links: %{github: @github}
     ]
   end
