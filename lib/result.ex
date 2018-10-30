@@ -1,6 +1,40 @@
 defmodule Result do
   @moduledoc """
-  Library containing helper functions for the result monad.
+  Result is a module for handling functions returning a `t:Result.t/0`.
+  This module is inspired by the f# Result module.
+  A result can be either the tuple {:ok, term} where term will be the expected return value of a function,
+  or the tuple {:error, term} where term will be an explanation of what went wrong while executing a function.
+
+  Using this module, it will be possible to combine functions that return a `t:Result.t/0`, and functions that take the value contained by the ok variant.
+  In the case one of the functions returns an error variant, subsequent functions expecting an ok result can be prevented from being executed.
+  Also, functions can be connected that will only execute in the case of an error.
+
+  ## Examples
+
+      iex> defmodule ResultExample do
+      ...>
+      ...>   def divide(0, _), do: {:error, :zero_division_exception}
+      ...>   def divide(0.0, _), do: {:error, :zero_division_exception}
+      ...>   def divide(x, y), do: Result.return(x / y)
+      ...>   def subtract(x, y), do: Result.return(x - y)
+      ...>
+      ...> end
+      ...>
+      ...> ResultExample.divide(4, 2)
+      ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+      {:ok, 0.0}
+      iex> ResultExample.divide(4, 2)
+      ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+      ...> |> Result.bind(fn x -> ResultExample.divide(x, 2) end)
+      ...> |> Result.bind(fn x -> ResultExample.subtract(x, 2) end)
+      {:error, :zero_division_exception}
+      iex> ResultExample.divide(0, 2)
+      ...> |> Result.or_else(2)
+      2
+      iex> ResultExample.divide(0, 2)
+      ...> |> Result.or_else_with(fn _err -> {:ok, 0} end)
+      {:ok, 0}
+
   """
 
   @type t ::
@@ -8,7 +42,7 @@ defmodule Result do
           | {:error, term}
 
   @doc """
-  Elevates a value to a Result type.
+  Elevates a value to a `t:Result.t/0` type.
 
   ## Examples
 
@@ -20,8 +54,8 @@ defmodule Result do
   def return(value), do: {:ok, value}
 
   @doc """
-  Runs a function against the Results value.
-  If the Result is an error, the function will not be executed.
+  Runs a function against the `t:Result.t/0`s value.
+  If the `t:Result.t/0` is an error, the function will not be executed.
 
   ## Examples
 
@@ -39,10 +73,10 @@ defmodule Result do
     {:ok, fun.(value)}
   end
 
-  def map(error, _), do: error
+  def map(result, _), do: result
 
   @doc """
-  Partially applies Result.map with the passed function.
+  Partially applies `Result.map/2` with the passed function.
   """
   @spec map((t -> t)) :: (t -> t)
   def map(fun) do
@@ -50,9 +84,10 @@ defmodule Result do
   end
 
   @doc """
-  Executes or partially executes the function given as value of the first Result,
-  and applies it with the value of the second Result.
-  If the function has an arity greater than 1, the returned Result value will be the function partially applied.
+  Executes or partially executes the function given as value of the first `t:Result.t/0`,
+  and applies it with the value of the second `t:Result.t/0`.
+  If the function has an arity greater than 1, the returned `t:Result.t/0` value will be the function partially applied.
+  (The function name is 'appl' rather than 'apply' to prevent import conflicts with 'Kernel.apply')
 
   ## Examples
 
@@ -96,9 +131,9 @@ defmodule Result do
   def appl(_, {:error, _} = error), do: error
 
   @doc """
-  Applies a function with the value of the Result.
-  The passed function is expected to return a Result.
-  This can be useful for chaining functions that elevate values into results together.
+  Applies a function with the value of the `t:Result.t/0`.
+  The passed function is expected to return a `t:Result.t/0`.
+  This can be useful for chaining functions together that elevate values into `t:Result.t/0`s.
 
   ## Examples
 
@@ -124,10 +159,10 @@ defmodule Result do
     fun.(value)
   end
 
-  def bind(error, _), do: error
+  def bind(result, _), do: result
 
   @doc """
-  Partially applies Result.bind with the passed function.
+  Partially applies `Result.bind/2` with the passed function.
   """
   @spec bind((term -> t)) :: (t -> t)
   def bind(fun) do
@@ -135,8 +170,8 @@ defmodule Result do
   end
 
   @doc """
-  Unwraps the Result to return its value.
-  Throws an error if the Result is an error.
+  Unwraps the `t:Result.t/0` to return its value.
+  Throws an error if the `t:Result.t/0` is an error.
 
   ## Examples
 
@@ -151,8 +186,8 @@ defmodule Result do
   def unwrap!({:error, error}), do: throw(error)
 
   @doc """
-  Unwraps the Result to return its value.
-  The second argument will be a specific error message to throw when the result is an Error.
+  Unwraps the `t:Result.t/0` to return its value.
+  The second argument will be a specific error message to throw when the `t:Result.t/0` is an Error.
 
   ## Examples
 
@@ -167,8 +202,8 @@ defmodule Result do
   def expect!(_, message), do: throw(message)
 
   @doc """
-  Unwraps the Result to return its value.
-  If the Result is an error, it will return the default value passed as second argument instead.
+  Unwraps the `t:Result.t/0` to return its value.
+  If the `t:Result.t/0` is an error, it will return the default value passed as second argument instead.
 
   ## Examples
 
@@ -187,8 +222,8 @@ defmodule Result do
   def or_else(_, default), do: default
 
   @doc """
-  Unwraps the Result to return its value.
-  If the Result is an error, the given function will be applied with the unwrapped error instead.
+  Unwraps the `t:Result.t/0` to return its value.
+  If the `t:Result.t/0` is an error, the given function will be applied with the unwrapped error instead.
 
   ## Examples
 
@@ -207,7 +242,7 @@ defmodule Result do
   def or_else_with({:error, error}, fun), do: fun.(error)
 
   @doc """
-  Flatten nested Results into one Result.
+  Flatten nested `t:Result.t/0`s into a single `t:Result.t/0`.
 
   ## Examples
 
@@ -234,7 +269,7 @@ defmodule Result do
   def flatten({:error, _} = error), do: error
 
   @doc """
-  Flattens an enumerable of Results into a Result of enumerables.
+  Flattens an `t:Enumerable.t/0` of `t:Result.t/0`s into a `t:Result.t/0` of enumerables.
 
   ## Examples
 
@@ -287,7 +322,7 @@ defmodule Result do
   def flatten_enum(_), do: {:error, "Result.flatten_enum Unknown Type"}
 
   @doc """
-  Converts the Result to an Option.
+  Converts the `t:Result.t/0` to an Option.
   An Option is a {:some, term} tuple pair, or the :none atom.
 
   ## Examples

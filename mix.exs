@@ -4,10 +4,18 @@ defmodule Result.MixProject do
   def project do
     [
       app: :result,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+
+      # Docs
+      name: "Result",
+      source_url: "https://github.com/nanaki04/result_ex",
+      docs: [
+        main: "Result",
+        extras: ["README.md"]
+      ]
     ]
   end
 
