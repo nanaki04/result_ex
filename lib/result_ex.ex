@@ -1,7 +1,7 @@
 defmodule ResultEx do
   @moduledoc """
   ResultEx is a module for handling functions returning a `t:ResultEx.t/0`.
-  This module is inspired by the f# ResultEx module, and Railway Oriented Programming as explained here by Scott Wlaschin here: https://fsharpforfunandprofit.com/rop/
+  This module is inspired by the f# Result module, and [Railway Oriented Programming](https://fsharpforfunandprofit.com/rop/) as explained by Scott Wlaschin.
 
   A result can be either the tuple {:ok, term} where term will be the expected return value of a function,
   or the tuple {:error, term} where term will be an explanation of what went wrong while executing a function.
