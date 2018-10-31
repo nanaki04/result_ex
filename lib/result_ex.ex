@@ -69,7 +69,7 @@ defmodule ResultEx do
       {:error, "Oops"}
 
   """
-  @spec map(t, fun) :: t
+  @spec map(t, (term -> term)) :: t
   def map({:ok, value}, fun) do
     {:ok, fun.(value)}
   end
@@ -79,7 +79,7 @@ defmodule ResultEx do
   @doc """
   Partially applies `ResultEx.map/2` with the passed function.
   """
-  @spec map((t -> t)) :: (t -> t)
+  @spec map((term -> term)) :: (t -> t)
   def map(fun) do
     fn result -> map(result, fun) end
   end
@@ -237,7 +237,7 @@ defmodule ResultEx do
       "Oops!"
 
   """
-  @spec or_else_with(t, fun) :: term
+  @spec or_else_with(t, (term -> term)) :: term
   def or_else_with({:ok, value}, _), do: value
 
   def or_else_with({:error, error}, fun), do: fun.(error)
@@ -270,7 +270,7 @@ defmodule ResultEx do
   def flatten({:error, _} = error), do: error
 
   @doc """
-  Flattens an `t:Enumerable.t/0` of `t:ResultEx.t/0`s into a `t:ResultEx.t/0` of enumerables.
+  Flattens an `t:Enum.t/0` of `t:ResultEx.t/0`s into a `t:ResultEx.t/0` of enumerables.
 
   ## Examples
 
